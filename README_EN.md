@@ -1,4 +1,6 @@
 English | [简体中文](README.md)
+
+# SAMTool
 segment anything (SAM) for C# Inference
 
 Official website: https://segment-anything.com/
