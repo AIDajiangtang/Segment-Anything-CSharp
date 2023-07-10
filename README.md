@@ -1,3 +1,5 @@
+简体中文 | [English](README_EN.md)
+
 # SAMTool
 segment anything（SAM） for C# Inference
 
