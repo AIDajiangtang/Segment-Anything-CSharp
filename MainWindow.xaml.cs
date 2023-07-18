@@ -1,4 +1,4 @@
-﻿using Microsoft.ML.OnnxRuntime;
+using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
 using System;
 using System.Collections.Generic;
@@ -19,7 +19,7 @@ namespace SAMViewer
     public partial class MainWindow : Window
     {
         // 图像文件路径
-        private string mImagePath =string.Empty;
+        private string mImagePath = string.Empty;
         // 标注列表
         private List<FrameworkElement> annotations = new List<FrameworkElement>();
         float[] mImg;
@@ -39,13 +39,14 @@ namespace SAMViewer
         public MainWindow()
         {
             InitializeComponent();
-            this.image.Width =  0.7f*this.Width;
+            this.image.Width = 0.7f * this.Width;
             this.image.Height = this.Height;
 
             UI = Dispatcher.CurrentDispatcher;
             mMask = new BitmapImage();
 
         }
+
         /// <summary>
         /// 加载图像
         /// </summary>
@@ -55,6 +56,7 @@ namespace SAMViewer
             this.mOrgwid = (int)bitmap.Width;
             this.mOrghei = (int)bitmap.Height;
             this.image.Source = bitmap;//显示图像
+
         }
         /// <summary>
         /// 加载模型
@@ -93,39 +95,39 @@ namespace SAMViewer
         {
             if (this.mReady == false)
                 return;
-            
+
             var embedding_tensor = new DenseTensor<float>(this.mImgEmbedding, new[] { 1, 256, 64, 64 });
 
             var bpmos = promotions.FindAll(e => e.mType == PromotionType.Box);
             var pproms = promotions.FindAll(e => e.mType == PromotionType.Point);
-            int boxCount = promotions.FindAll(e=>e.mType == PromotionType.Box).Count();
+            int boxCount = promotions.FindAll(e => e.mType == PromotionType.Box).Count();
             int pointCount = promotions.FindAll(e => e.mType == PromotionType.Point).Count();
-            float[] promotion = new float[2*(boxCount * 2 + pointCount)];
+            float[] promotion = new float[2 * (boxCount * 2 + pointCount)];
             float[] label = new float[boxCount * 2 + pointCount];
             for (int i = 0; i < boxCount; i++)
             {
                 var p = bpmos[i].GetDenseTensor();
-                for (int j =0;j< p.Count();j++)
+                for (int j = 0; j < p.Count(); j++)
                 {
                     promotion[4 * i + j] = p[j];
                 }
 
                 label[2 * i] = 2;
-                label[2 * i+1] = 3;
+                label[2 * i + 1] = 3;
             }
             for (int i = 0; i < pointCount; i++)
             {
                 var p = pproms[i].GetDenseTensor();
                 for (int j = 0; j < p.Count(); j++)
                 {
-                    promotion[boxCount*4+2 * i + j] = p[j];
+                    promotion[boxCount * 4 + 2 * i + j] = p[j];
                 }
 
-                label[boxCount * 2+ i] =1;
+                label[boxCount * 2 + i] = 1;
             }
-         
+
             var point_coords_tensor = new DenseTensor<float>(promotion, new[] { 1, boxCount * 2 + pointCount, 2 });
-          
+
             var point_label_tensor = new DenseTensor<float>(label, new[] { 1, boxCount * 2 + pointCount });
 
             float[] mask = new float[256 * 256];
@@ -185,13 +187,13 @@ namespace SAMViewer
                     }
                     else
                     {
-                        bitmapout.SetPixel(x, y, resizedImage.GetPixel(x,y));
+                        bitmapout.SetPixel(x, y, resizedImage.GetPixel(x, y));
                     }
                 }
             }
-           // BitmapImage bitmapImage = new BitmapImage();
+            // BitmapImage bitmapImage = new BitmapImage();
             // 将Bitmap转换为BitmapImage
-           
+
             UI.Invoke(new Action(delegate
             {
                 mMask = new BitmapImage();
@@ -232,11 +234,11 @@ namespace SAMViewer
                     todel.Add(v as UserControl);
             }
 
-            todel.ForEach(e=> { this.ImgCanvas.Children.Remove(e); });
+            todel.ForEach(e => { this.ImgCanvas.Children.Remove(e); });
         }
         // 鼠标左键按下事件处理程序
         private void image_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-        {
+        {  
             // 如果当前没有选中的标注，创建一个点标注
             this.image.CaptureMouse();
             if (RPoint.IsChecked == true)
@@ -250,7 +252,7 @@ namespace SAMViewer
 
                 Point clickPoint = e.GetPosition(image);
                 Point orgImgPoint = this.TranslateOrgImgPoint(clickPoint);
-
+                Console.WriteLine(orgImgPoint.ToString());
                 PromotionBase promt = new PointPromotion();
                 (promt as PointPromotion).X = (int)orgImgPoint.X;
                 (promt as PointPromotion).Y = (int)orgImgPoint.Y;
@@ -259,11 +261,11 @@ namespace SAMViewer
                 PointPromotion ptn = ts.ApplyCoords((promt as PointPromotion), this.mOrgwid, this.mOrghei);
                 Thread thread = new Thread(() =>
                 {
-                    this.Decode(new List<PromotionBase>() { ptn });                  
+                    this.Decode(new List<PromotionBase>() { ptn });
                 });
                 thread.Start();
             }
-            else if(RBox.IsChecked == true)
+            else if (RBox.IsChecked == true)
             {
                 _startPoint = e.GetPosition(this.ImgCanvas);
                 _currentAnnotation = new RectAnnotation
@@ -278,7 +280,8 @@ namespace SAMViewer
                 Point clickPoint = e.GetPosition(image);
                 Point orgImgPoint = this.TranslateOrgImgPoint(clickPoint);
                 _currentAnnotation.LeftUP = orgImgPoint;
-            }     
+            }
+
         }
 
         // 鼠标移动事件处理程序
@@ -293,15 +296,15 @@ namespace SAMViewer
                 _currentAnnotation.Width = width;
                 _currentAnnotation.Height = height;
                 Canvas.SetLeft(_currentAnnotation, Math.Min(_startPoint.X, currentPoint.X));
-                Canvas.SetTop(_currentAnnotation, Math.Min(_startPoint.Y, currentPoint.Y));         
+                Canvas.SetTop(_currentAnnotation, Math.Min(_startPoint.Y, currentPoint.Y));
             }
         }
         private void image_PreviewMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
         {
+            this.image.ReleaseMouseCapture();
             if (_currentAnnotation == null)
                 return;
-           
-            this.image.ReleaseMouseCapture();
+        
             Point clickPoint = e.GetPosition(image);
             Point orgImgPoint = this.TranslateOrgImgPoint(clickPoint);
             _currentAnnotation.RightBottom = orgImgPoint;
@@ -315,11 +318,11 @@ namespace SAMViewer
 
             Transforms ts = new Transforms(1024);
             var pb = ts.ApplyBox(promt, this.mOrgwid, this.mOrghei);
-           
+
             Thread thread = new Thread(() =>
             {
                 this.Decode(new List<PromotionBase>() { pb });
-               
+
             });
             thread.Start();
             _currentAnnotation = null;
@@ -354,7 +357,7 @@ namespace SAMViewer
 
                 if (!File.Exists(this.mImagePath))
                     return;
-            
+
                 this.LoadImgGrid.Visibility = Visibility.Collapsed;
                 this.ImgCanvas.Visibility = Visibility.Visible;
                 this.LoadImage(this.mImagePath);
@@ -377,7 +380,7 @@ namespace SAMViewer
                 });
                 thread.Start();
             }
-        }    
+        }
         private RectAnnotation _currentAnnotation;
         private Point _startPoint;
 
