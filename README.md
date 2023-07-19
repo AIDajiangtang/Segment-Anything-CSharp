@@ -11,7 +11,7 @@ segment anything（SAM） for C# Inference
 1.将官方发布的预训练模型，拆分成编码器和解码器，并分别保存为ONNX格式。<br />  
 2.使用C#语言加载模型，进行推理，并用WPF进行交互和显示。<br />  
 
-运行程序时需要将decoder-quant.onnx和encoder-quant.onnx放到exe路径下<br />  
+运行程序时需要将decoder-quant.onnx和encoder-quant.onnx放到exe路径下，.Net Framework4.7.2<br />  
 效果演示视频：<br />  
 https://weixin.qq.com/sph/A1KT5X<br />  
 https://weixin.qq.com/sph/AJXH8U<br />  
