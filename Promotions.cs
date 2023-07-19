@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,43 +12,68 @@ namespace SAMViewer
         Box
     }
 
-    public abstract class PromotionBase
+    public abstract class Promotion
     {
-        public abstract float[] GetDenseTensor();
+        public abstract float[] GetInput();
+        public abstract float[] GetLable();
         public PromotionType mType;
     }
     /// <summary>
     /// 提示点
     /// </summary>
-    public class PointPromotion: PromotionBase
+    public class PointPromotion: Promotion
     {
-        public PointPromotion()
+        public PointPromotion(OpType optype)
         {
             this.mType = PromotionType.Point;
+            this.m_Optype = optype;
         }
         public int X { get; set; }
         public int Y { get; set; }
-        public override float[] GetDenseTensor()
+        public override float[] GetInput()
         {
-            float[] pts = new float[2] { X ,Y};
-            return pts;
+            return new float[2] { X ,Y};
         }
+        public override float[] GetLable()
+        {
+            if (this.m_Optype == OpType.ADD)
+            {
+                return new float[1] { 1 };
+            }
+            else
+            {
+                return new float[1] { 0 };
+            }          
+        }
+
+        public OpType m_Optype;
+    }
+    public enum OpType
+    {
+        ADD,
+        REMOVE
     }
     /// <summary>
     /// 提示框
     /// </summary>
-    class BoxPromotion : PromotionBase
+    class BoxPromotion : Promotion
     {
         public BoxPromotion()
         {
-            this.mLeftUp = new PointPromotion();
-            this.mRightBottom = new PointPromotion();
+            this.mLeftUp = new PointPromotion(OpType.ADD);
+            this.mRightBottom = new PointPromotion(OpType.ADD);
             this.mType = PromotionType.Box;
         }
-        public override float[] GetDenseTensor()
+        public override float[] GetInput()
         {
-            float[] pts = new float[4] { this.mLeftUp.X, this.mLeftUp.Y, this.mRightBottom.X, this.mRightBottom.Y };
-            return pts;
+            return new float[4] { this.mLeftUp.X, 
+                this.mLeftUp.Y, 
+                this.mRightBottom.X, 
+                this.mRightBottom.Y };
+        }
+        public override float[] GetLable()
+        {
+            return new float[2] { 2,3 };
         }
         public PointPromotion mLeftUp { get; set; }//左上角点
         public PointPromotion mRightBottom { get; set; }//左上角点
