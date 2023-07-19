@@ -15,7 +15,7 @@ This project consists of two parts:
 
 2. Use C# language to load the model, perform inference, and use WPF for interaction and display.
 
-put decoder-quant.onnx adn encoder-quant.onnx to the same path with exe
+put decoder-quant.onnx adn encoder-quant.onnx to the same path with exe,.Net Framework4.7.2
 
 Effect demo video:
 
