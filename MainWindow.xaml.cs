@@ -160,74 +160,20 @@ namespace SAMViewer
                 NamedOnnxValue.CreateFromTensor("orig_im_size", orig_im_size_values_tensor)
             };
 
-            var mask1 = this.mDecoder.Run(decode_inputs);
-
-
-            var outputmask = mask1.First().AsTensor<float>().ToArray();
-            int width = mOrgwid;
-            int height = mOrghei;
-
-            //// Create a new bitmap with the desired size
-            System.Drawing.Bitmap bitmapout = new System.Drawing.Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-            
-            ////加载原始图像
-            //System.Drawing.Image originalImage = System.Drawing.Image.FromFile(this.mImagePath);
-
-            ////创建新的Bitmap对象，并设置大小
-            //System.Drawing.Bitmap resizedImage = new System.Drawing.Bitmap(width, height);
-
-            ////创建Graphics对象，并设置插值模式
-            //System.Drawing.Graphics g = System.Drawing.Graphics.FromImage(resizedImage);
-            //g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-
-            ////将原始图像绘制到新的Bitmap对象中
-            //g.DrawImage(originalImage, new System.Drawing.Rectangle(0, 0, width, height), new System.Drawing.Rectangle(0, 0, originalImage.Width, originalImage.Height), System.Drawing.GraphicsUnit.Pixel);
-            //// Set the pixel values in the bitmap
-            for (int y = 0; y < height; y++)
-            {
-                for (int x = 0; x < width; x++)
-                {
-                    int ind = y * width + x;
-                    if (outputmask[ind] > 0)
-                    {
-                        bitmapout.SetPixel(x, y, System.Drawing.Color.FromArgb(0, 255, 0, 0));
-                    }
-                    else
-                    {
-                        bitmapout.SetPixel(x, y, System.Drawing.Color.FromArgb(255, 255, 255, 255));
-                    }
-                }
-            }
-         
+            var segmask = this.mDecoder.Run(decode_inputs);
+            var outputmask = segmask.First().AsTensor<float>().ToArray();
 
             UI.Invoke(new Action(delegate
             {
-                //this.mMaskBitmap = new BitmapImage();
-
-                //using (System.IO.MemoryStream stream = new System.IO.MemoryStream())
-                //{
-                //    bitmapout.Save(stream, System.Drawing.Imaging.ImageFormat.Bmp);
-                //    stream.Seek(0, System.IO.SeekOrigin.Begin);
-                //    this.mMaskBitmap.BeginInit();
-                //    this.mMaskBitmap.CacheOption = BitmapCacheOption.OnLoad;
-                //    this.mMaskBitmap.StreamSource = stream;
-                //    this.mMaskBitmap.EndInit();
-                //}
-
-                // BitmapImage bitmapImage = new BitmapImage();
-                // 将Bitmap转换为BitmapImage
-
-                WriteableBitmap bp = new WriteableBitmap(width, height, 96, 96, PixelFormats.Pbgra32, null);
-                
-
+                WriteableBitmap bp = new WriteableBitmap(this.mOrgwid, this.mOrghei, 96, 96, PixelFormats.Pbgra32, null);              
                 // 设置像素数据，将所有像素的透明度设置为半透明
-                byte[] pixelData = new byte[width * height * 4];
-
-                for (int y = 0; y < height; y++)
+                byte[] pixelData = new byte[this.mOrgwid * this.mOrghei * 4];
+                Array.Clear(pixelData, 0, pixelData.Length);
+                for (int y = 0; y < this.mOrghei; y++)
                 {
-                    for (int x = 0; x < width; x++)
+                    for (int x = 0; x < this.mOrgwid; x++)
                     {
-                        int ind = y * width + x;
+                        int ind = y * this.mOrgwid + x;
                         if (outputmask[ind] > 0)
                         {
                             pixelData[4*ind] = 0;  // Blue
@@ -235,19 +181,17 @@ namespace SAMViewer
                             pixelData[4 * ind + 2] = 255;  // Red
                             pixelData[4 * ind + 3] = 255;  // Alpha
                         }
-                        else
-                        {
-                            pixelData[4 * ind] = 0;  // Blue
-                            pixelData[4 * ind + 1] = 0;  // Green
-                            pixelData[4 * ind + 2] = 0;  // Red
-                            pixelData[4 * ind + 3] = 0;  // Alpha
-                        }
+                        //else
+                        //{
+                        //    pixelData[4 * ind] = 0;  // Blue
+                        //    pixelData[4 * ind + 1] = 0;  // Green
+                        //    pixelData[4 * ind + 2] = 0;  // Red
+                        //    pixelData[4 * ind + 3] = 0;  // Alpha
+                        //}
                     }
                 }
 
-
-                bp.WritePixels(new Int32Rect(0, 0, width, height), pixelData, width * 4, 0);
-
+                bp.WritePixels(new Int32Rect(0, 0, this.mOrgwid, this.mOrghei), pixelData, this.mOrgwid * 4, 0);
                 // 创建一个BitmapImage对象，将WriteableBitmap作为源
                 this.mMask.Source = bp;
             }));
