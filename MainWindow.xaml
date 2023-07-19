@@ -13,24 +13,38 @@
             <ColumnDefinition Width="0.3*"/>
         </Grid.ColumnDefinitions>
         <Grid Grid.Column="0">
-            <Grid x:Name="LoadImgGrid"  >
-                <TextBox x:Name="ImgPathTxt" Height="30" Text="Enter image path here" Margin="222,253,81,276"  />
-                <Button x:Name="ImgSelButton" Content="Select Image" Height="30" Click="SelectFileButton_Click" Margin="49,253,523,276"/>
-            </Grid>
-            <Canvas x:Name="ImgCanvas" Width="700" Height="600" Visibility="Collapsed">
-                <Image x:Name="image" Stretch="Fill" PreviewMouseLeftButtonDown="image_MouseLeftButtonDown" MouseMove="image_MouseMove" PreviewMouseLeftButtonUp="image_PreviewMouseLeftButtonUp" 
+            <DockPanel x:Name="LoadImgGrid"  >
+                <Button x:Name="ImgSelButton" Content="Select Image" Height="30" Click="SelectFileButton_Click"  Margin="150,0,0,0" VerticalAlignment="Center"/>
+                <TextBox x:Name="ImgPathTxt" Height="30" Text="Enter image path here" Margin="50,0,50,0" VerticalAlignment="Center"  />
+            </DockPanel>
+            <Canvas x:Name="ImgCanvas" Visibility="Collapsed" PreviewMouseLeftButtonDown="image_MouseLeftButtonDown" MouseMove="image_MouseMove" PreviewMouseLeftButtonUp="image_PreviewMouseLeftButtonUp">
+                <Image x:Name="mImage" Stretch="Fill"  
                     Canvas.Left="0" Canvas.Top="0" Canvas.Right="0" Canvas.Bottom="0"/>
+                <Image x:Name="mMask" Stretch="Fill"  
+                    Canvas.Left="0" Canvas.Top="0" Canvas.Right="0" Canvas.Bottom="0"/>
+                
             </Canvas>
         </Grid>
-       
-        <Grid  Grid.Column="1">
-            <TextBlock x:Name="StatusTxt" Width="250" TextWrapping="Wrap" Foreground="Red"  Margin="23,499,25,10"/>
-            <TextBlock x:Name="PromotionTypeTxt" Width="200" Height="30"   Text="PromotionType" Margin="73,35,25,504"/>
-            <StackPanel  Width="200" Height="80" Margin="80,65,146,454">
-                <RadioButton x:Name="RPoint" Content="Point" GroupName="PromotionType" IsChecked="True" />
-                <RadioButton x:Name="RBox" Content="Box" GroupName="PromotionType" />
+
+        <StackPanel Grid.Column="1" >
+            <TextBlock x:Name="PromotionTypeTxt" Width="150" Height="30" Text="PromotionType:" HorizontalAlignment="Left" Margin="20,30,0,0"/>
+            <StackPanel  Width="200" Height="100"  HorizontalAlignment="Left" Margin="50,0,0,0">
+                <RadioButton x:Name="RPoint" Content="Point" GroupName="PromotionType" IsChecked="True"/>
+                <RadioButton x:Name="RBox" Content="Box" GroupName="PromotionType"  Margin="0,5,0,0"/>
+                <RadioButton x:Name="RText" Content="Text" GroupName="PromotionType" Margin="0,5,0,0"/>
+                <RadioButton x:Name="REverything" Content="Everything" GroupName="PromotionType" Margin="0,5,0,0"/>
             </StackPanel>
-        </Grid>
+            <DockPanel  Width="200" Height="50"  HorizontalAlignment="Left" Margin="50,0,0,0">
+                <RadioButton x:Name="RAdd" Content="Add Mask" GroupName="ProOperationType" IsChecked="True" />
+                <RadioButton x:Name="RRemove" Content="Remove Mask" GroupName="ProOperationType" Margin="5,0,0,0"/>
+            </DockPanel>
+            <DockPanel  Width="170" Height="30"  HorizontalAlignment="Left" Margin="50,0,0,0">
+                <Button x:Name="BReset" Width="50" Height="30" Content="Reset" Click="BReset_Click"/>
+                <Button x:Name="BUndo"  Width="50" Height="30" Content="Undo"  Margin="10,0,0,0"/>
+                <Button x:Name="BRedo"  Width="50" Height="30" Content="Redo"  Margin="10,0,0,0"/>
+            </DockPanel>
+            <TextBlock x:Name="StatusTxt" Width="250" TextWrapping="Wrap" VerticalAlignment="Bottom" Foreground="Red"  Margin="0,50,0,0"/>
+        </StackPanel>
        
     </Grid>
 </Window>
