@@ -1,4 +1,5 @@
-﻿using System.Windows;
+using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Shapes;
@@ -12,14 +13,15 @@ namespace SAMViewer
 
         private readonly Shape _shape;
         private readonly TextBlock _textBlock;
-
-        public PointAnnotation()
+        public SolidColorBrush m_Brush = Brushes.Red;
+        public PointAnnotation(SolidColorBrush brush)
         {
+            this.m_Brush = brush;
             _shape = new Ellipse
             {
                 Width = DefaultSize,
                 Height = DefaultSize,
-                Fill = Brushes.Red,
+                Fill = brush,
                 Stroke = Brushes.Black,
                 StrokeThickness = 1
             };
@@ -35,7 +37,6 @@ namespace SAMViewer
 
             var grid = new Grid();
             grid.Children.Add(_shape);
-            //grid.Children.Add(_textBlock);
 
             Content = grid;
         }
@@ -54,28 +55,28 @@ namespace SAMViewer
             set { _textBlock.Text = value; }
         }
 
-        protected override void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
-        {
-            base.OnMouseLeftButtonDown(e);
-            CaptureMouse();
-        }
+        //protected override void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
+        //{
+        //    base.OnMouseLeftButtonDown(e);
+        //    CaptureMouse();
+        //}
 
-        protected override void OnMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs e)
-        {
-            base.OnMouseLeftButtonUp(e);
-            ReleaseMouseCapture();
-        }
+        //protected override void OnMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs e)
+        //{
+        //    base.OnMouseLeftButtonUp(e);
+        //    ReleaseMouseCapture();
+        //}
 
-        protected override void OnMouseMove(System.Windows.Input.MouseEventArgs e)
-        {
-            base.OnMouseMove(e);
-            if (IsMouseCaptured)
-            {
-                var newPosition = e.GetPosition(Parent as UIElement);
-                Canvas.SetLeft(this, newPosition.X - _shape.Width / 2);
-                Canvas.SetTop(this, newPosition.Y - _shape.Height / 2);
-            }
-        }
+        //protected override void OnMouseMove(System.Windows.Input.MouseEventArgs e)
+        //{
+        //    base.OnMouseMove(e);
+        //    if (IsMouseCaptured)
+        //    {
+        //        var newPosition = e.GetPosition(Parent as UIElement);
+        //        Canvas.SetLeft(this, newPosition.X - _shape.Width / 2);
+        //        Canvas.SetTop(this, newPosition.Y - _shape.Height / 2);
+        //    }
+        //}
     }
     /// <summary>
     /// 四边形标注
@@ -112,7 +113,7 @@ namespace SAMViewer
             Content = grid;
         }
 
-        public Point Position
+        public Point StartPosition
         {
             get { return new Point(Canvas.GetLeft(this) + _shape.Width / 2, Canvas.GetTop(this) + _shape.Height / 2); }
             set
@@ -146,26 +147,24 @@ namespace SAMViewer
         protected override void OnMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs e)
         {
             base.OnMouseLeftButtonDown(e);
-            CaptureMouse();
+            //CaptureMouse();           
         }
 
         protected override void OnMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs e)
         {
             base.OnMouseLeftButtonUp(e);
-            ReleaseMouseCapture();
-
-
+            //ReleaseMouseCapture();
         }
 
-        protected override void OnMouseMove(System.Windows.Input.MouseEventArgs e)
-        {
-            base.OnMouseMove(e);
-            if (IsMouseCaptured)
-            {
-                var newPosition = e.GetPosition(Parent as UIElement);
-                Canvas.SetLeft(this, newPosition.X - _shape.Width / 2);
-                Canvas.SetTop(this, newPosition.Y - _shape.Height / 2);
-            }
-        }
+        //protected override void OnMouseMove(System.Windows.Input.MouseEventArgs e)
+        //{
+        //    base.OnMouseMove(e);
+        //    if (IsMouseCaptured)
+        //    {
+        //        var newPosition = e.GetPosition(Parent as UIElement);
+        //        Canvas.SetLeft(this, newPosition.X - _shape.Width / 2);
+        //        Canvas.SetTop(this, newPosition.Y - _shape.Height / 2);
+        //    }
+        //}
     }
 }
