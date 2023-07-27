@@ -2,10 +2,8 @@ English | [简体中文](README.md)
 
 # SAMTool
 segment anything (SAM) for C# Inference
+[[`Paper`](https://ai.facebook.com/research/publications/segment-anything/)] [[`Source Code`](https://github.com/facebookresearch/segment-anything/)]  
 
-Official website: https://segment-anything.com/
-
-Official project source code: https://github.com/facebookresearch/segment-anything
 
 Although the official pre-training model and inference code are provided, the pre-training model is only in pytorch format, and the inference code only provides Python code based on the Pytorch framework.
 
