@@ -38,10 +38,11 @@
                 <RadioButton x:Name="RAdd" Content="Add Mask" GroupName="ProOperationType" IsChecked="True" />
                 <RadioButton x:Name="RRemove" Content="Remove Mask" GroupName="ProOperationType" Margin="5,0,0,0"/>
             </DockPanel>
-            <DockPanel  Width="170" Height="30"  HorizontalAlignment="Left" Margin="50,0,0,0">
+            <DockPanel  Width="230" Height="30"  HorizontalAlignment="Left" Margin="20,0,0,0">
                 <Button x:Name="BReset" Width="50" Height="30" Content="Reset" Click="BReset_Click"/>
                 <Button x:Name="BUndo"  Width="50" Height="30" Content="Undo"  Margin="10,0,0,0"/>
                 <Button x:Name="BRedo"  Width="50" Height="30" Content="Redo"  Margin="10,0,0,0"/>
+                <Button x:Name="BReLoad"  Width="50" Height="30" Content="Reload"  Margin="10,0,0,0" Click="BReLoad_Click"/>
             </DockPanel>
             <TextBlock x:Name="StatusTxt" Width="250" TextWrapping="Wrap" VerticalAlignment="Bottom" Foreground="Red"  Margin="0,50,0,0"/>
         </StackPanel>
