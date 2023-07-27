@@ -1,7 +1,7 @@
 English | [简体中文](README.md)
 
 # SAMTool
-segment anything (SAM) for C# Inference
+segment anything (SAM) for C# Inference  
 [[`Paper`](https://ai.facebook.com/research/publications/segment-anything/)] [[`Source Code`](https://github.com/facebookresearch/segment-anything/)]  
 
 
