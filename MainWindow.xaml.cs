@@ -32,7 +32,6 @@ namespace SAMViewer
         int mOrghei;
 
         bool mReady = false;
-
         Dispatcher UI;
 
         // 构造函数
@@ -58,6 +57,7 @@ namespace SAMViewer
             this.mOrgwid = (int)bitmap.Width;
             this.mOrghei = (int)bitmap.Height;
             this.mImage.Source = bitmap;//显示图像
+            
         }
 
         /// <summary>
@@ -65,11 +65,16 @@ namespace SAMViewer
         /// </summary>
         void LoadOnnxModel()
         {
-            string exePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-            
+            if (this.mEncoder != null)
+                this.mEncoder.Dispose();
+
+            if (this.mDecoder != null)
+                this.mDecoder.Dispose();
+
+            string exePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);          
             string encode_model_path = exePath+ @"\encoder-quant.onnx";
             this.mEncoder = new InferenceSession(encode_model_path);
-
+            
             string decode_model_path = exePath + @"\decoder-quant.onnx";
             this.mDecoder = new InferenceSession(decode_model_path);
         }
@@ -193,7 +198,7 @@ namespace SAMViewer
 
                 bp.WritePixels(new Int32Rect(0, 0, this.mOrgwid, this.mOrghei), pixelData, this.mOrgwid * 4, 0);
                 // 创建一个BitmapImage对象，将WriteableBitmap作为源
-                this.mMask.Source = bp;
+                this.mMask.Source = bp; 
             }));
         }
         Point TranslateOrgImgPoint(Point clickPoint)
@@ -382,6 +387,13 @@ namespace SAMViewer
         private void BReset_Click(object sender, RoutedEventArgs e)
         {
             this.Reset();
+        }
+
+        private void BReLoad_Click(object sender, RoutedEventArgs e)
+        {
+            this.Reset();
+            this.LoadImgGrid.Visibility = Visibility.Visible;
+            this.ImgCanvas.Visibility = Visibility.Hidden;
         }
     }
 
