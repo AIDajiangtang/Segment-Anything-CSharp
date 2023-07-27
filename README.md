@@ -1,8 +1,8 @@
 简体中文 | [English](README_EN.md)
 
 # segment anything（SAM）
-官方网址：https://segment-anything.com/  
-官方项目源码：https://github.com/facebookresearch/segment-anything  
+[[`Paper`](https://ai.facebook.com/research/publications/segment-anything/)] [[`源码`](https://github.com/facebookresearch/segment-anything/)]  
+
 
 # Ours：segment anything（SAM） for C# Inference  
 虽然官方提供了预训练模型，和推理代码，但预训练模型只有pytorch格式的，且推理代码只提供了基于Pytorch框架的Python代码。  
