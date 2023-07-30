@@ -118,7 +118,7 @@ namespace SAMViewer
             int neww = 0;
             int newh = 0;
             this.GetPreprocessShape(orgw, orgh, this.mTargetLength,ref neww,ref newh);
-            PointPromotion newpointp = new PointPromotion();
+            PointPromotion newpointp = new PointPromotion(org_point.m_Optype);
             float scalx = 1.0f*neww / orgw;
             float scaly = 1.0f * newh / orgh;
             newpointp.X = (int)(org_point.X* scalx);
