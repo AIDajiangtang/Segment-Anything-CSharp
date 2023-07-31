@@ -73,9 +73,19 @@ namespace SAMViewer
 
             string exePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);          
             string encode_model_path = exePath+ @"\encoder-quant.onnx";
+            if (!File.Exists(encode_model_path))
+            {
+                MessageBox.Show(encode_model_path+" not exist!");
+                return;
+            }
             this.mEncoder = new InferenceSession(encode_model_path);
             
             string decode_model_path = exePath + @"\decoder-quant.onnx";
+            if (!File.Exists(decode_model_path))
+            {
+                MessageBox.Show(decode_model_path+" not exist!");
+                return;
+            }
             this.mDecoder = new InferenceSession(decode_model_path);
         }
         /// <summary>
