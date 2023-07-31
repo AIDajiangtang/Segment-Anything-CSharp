@@ -22,9 +22,10 @@ namespace SAMViewer
         // 图像文件路径
         private string mImagePath = string.Empty;
         List<Promotion> mPromotionList = new List<Promotion>();
-        float[] mImg;
-        InferenceSession mEncoder;
-        InferenceSession mDecoder;
+        InferenceSession mSAMEncoder;
+        InferenceSession mSAMDecoder;
+        InferenceSession mClipTxtEncoder;
+        InferenceSession mClipImgEncoder;
         float[] mImgEmbedding;
         private RectAnnotation mCurRectAnno;
         private Point _startPoint;
@@ -56,20 +57,101 @@ namespace SAMViewer
             BitmapImage bitmap = new BitmapImage(new Uri(imgpath));
             this.mOrgwid = (int)bitmap.Width;
             this.mOrghei = (int)bitmap.Height;
-            this.mImage.Source = bitmap;//显示图像
-            
+            this.mImage.Source = bitmap;//显示图像            
         }
-
         /// <summary>
-        /// 加载模型
+        /// 加载CLIP模型
         /// </summary>
-        void LoadOnnxModel()
+        void LoadClipONNXModel()
         {
-            if (this.mEncoder != null)
-                this.mEncoder.Dispose();
+            if (this.mClipTxtEncoder != null)
+                this.mClipTxtEncoder.Dispose();
 
-            if (this.mDecoder != null)
-                this.mDecoder.Dispose();
+            if (this.mClipImgEncoder != null)
+                this.mClipImgEncoder.Dispose();
+
+            string exePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+            string txtencoder = exePath + @"\textual.onnx";
+            if (!File.Exists(txtencoder))
+            {
+                MessageBox.Show(txtencoder + " not exist!");
+                return;
+            }
+            this.mClipTxtEncoder = new InferenceSession(txtencoder);
+
+            string imgencoder = exePath + @"\visual.onnx";
+            if (!File.Exists(imgencoder))
+            {
+                MessageBox.Show(imgencoder + " not exist!");
+                return;
+            }
+            this.mClipImgEncoder = new InferenceSession(imgencoder);
+        }
+        /// <summary>
+        /// CLIP对文本进行编码
+        /// </summary>
+        List<float> CLIPTxtEncoder(string txt)
+        {
+                //"a diagram", "a dog", "a cat"
+              List<Int64>token = new List<Int64>() {
+              49406,320,22697,49407,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,
+              49406,320,1929,49407,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,
+              49406,320,2368,49407,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0,0,0,0,0,0,0,0,
+              0,0,0,0,0 };
+            var txt_tensor = new DenseTensor<Int64>(token.ToArray(), new[] { 3, 77 });
+            var inputs = new List<NamedOnnxValue>
+            {
+                NamedOnnxValue.CreateFromTensor("input", txt_tensor)
+            };
+
+            var results = this.mClipTxtEncoder.Run(inputs);
+            var result = results.First().AsTensor<float>().ToArray();
+
+            return new List<float>();
+        }
+        /// <summary>
+        /// CLIP对图像进行编码
+        /// </summary>
+        List<float> CLIPImgEncoder(float[] img)
+        {
+            var tensor = new DenseTensor<float>(img, new[] { 1, 3, 224, 224 });
+            var inputs = new List<NamedOnnxValue>
+            {
+                NamedOnnxValue.CreateFromTensor("input", tensor)
+            };
+
+            var results = this.mClipImgEncoder.Run(inputs);
+            var result = results.First().AsTensor<float>().ToArray();
+
+            return new List<float>();
+        }
+        /// <summary>
+        /// 加载Segment Anything模型
+        /// </summary>
+        void LoadSAMOnnxModel()
+        {
+            if (this.mSAMEncoder != null)
+                this.mSAMEncoder.Dispose();
+
+            if (this.mSAMDecoder != null)
+                this.mSAMDecoder.Dispose();
 
             string exePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);          
             string encode_model_path = exePath+ @"\encoder-quant.onnx";
@@ -78,7 +160,7 @@ namespace SAMViewer
                 MessageBox.Show(encode_model_path+" not exist!");
                 return;
             }
-            this.mEncoder = new InferenceSession(encode_model_path);
+            this.mSAMEncoder = new InferenceSession(encode_model_path);
             
             string decode_model_path = exePath + @"\decoder-quant.onnx";
             if (!File.Exists(decode_model_path))
@@ -86,33 +168,36 @@ namespace SAMViewer
                 MessageBox.Show(decode_model_path+" not exist!");
                 return;
             }
-            this.mDecoder = new InferenceSession(decode_model_path);
+            this.mSAMDecoder = new InferenceSession(decode_model_path);
         }
         /// <summary>
-        /// 对图像进行编码
+        /// Segment Anything对图像进行编码
         /// </summary>
-        void ImageEncode()
+        void SAMImageEncode()
         {
             Transforms tranform = new Transforms(1024);
-            this.mImg = tranform.ApplyImage(mImagePath, this.mOrgwid, this.mOrghei);
+            float[]img = tranform.ApplyImage(mImagePath, this.mOrgwid, this.mOrghei);
 
-            var tensor = new DenseTensor<float>(this.mImg, new[] { 1, 3, 1024, 1024 });
+            var tensor = new DenseTensor<float>(img, new[] { 1, 3, 1024, 1024 });
             var inputs = new List<NamedOnnxValue>
             {
                 NamedOnnxValue.CreateFromTensor("x", tensor)
             };
 
-            var results = this.mEncoder.Run(inputs);
+            var results = this.mSAMEncoder.Run(inputs);
             this.mImgEmbedding = results.First().AsTensor<float>().ToArray();
         }
         /// <summary>
-        /// 提示信息解码
+        /// Segment Anything提示信息解码
         /// </summary>
-        void Decode(List<Promotion> promotions)
+        void SAMPromtDecode(List<Promotion> promotions)
         {
             if (this.mReady == false)
+            {
+                MessageBox.Show("Image Embedding is not done!");
                 return;
-
+            }
+               
             var embedding_tensor = new DenseTensor<float>(this.mImgEmbedding, new[] { 1, 256, 64, 64 });
 
             var bpmos = promotions.FindAll(e => e.mType == PromotionType.Box);
@@ -175,7 +260,7 @@ namespace SAMViewer
                 NamedOnnxValue.CreateFromTensor("orig_im_size", orig_im_size_values_tensor)
             };
 
-            var segmask = this.mDecoder.Run(decode_inputs);
+            var segmask = this.mSAMDecoder.Run(decode_inputs);
             var outputmask = segmask.First().AsTensor<float>().ToArray();
 
             UI.Invoke(new Action(delegate
@@ -211,6 +296,9 @@ namespace SAMViewer
                 this.mMask.Source = bp; 
             }));
         }
+        /// <summary>
+        /// 窗口坐标转图像坐标
+        /// </summary>
         Point TranslateOrgImgPoint(Point clickPoint)
         {
             double imageWidth = this.mImage.ActualWidth;
@@ -265,7 +353,7 @@ namespace SAMViewer
                 this.mPromotionList.Add(ptn);
                 Thread thread = new Thread(() =>
                 {
-                    this.Decode(this.mPromotionList);
+                    this.SAMPromtDecode(this.mPromotionList);
                 });
                 thread.Start();
             }
@@ -325,7 +413,7 @@ namespace SAMViewer
             this.mPromotionList.Add(pb);
             Thread thread = new Thread(() =>
             {              
-                this.Decode(this.mPromotionList);
+                this.SAMPromtDecode(this.mPromotionList);
             });
             thread.Start();
             this.mCurRectAnno = null;
@@ -368,12 +456,14 @@ namespace SAMViewer
 
                 Thread thread = new Thread(() =>
                 {
-                    this.LoadOnnxModel();//加载模型
+                    this.LoadSAMOnnxModel();//加载Segment Anything模型
+                    this.LoadClipONNXModel();
+
                     UI.Invoke(new Action(delegate
                     {
                         this.ShowStatus("ONNX Model Loaded");
                     }));
-                    this.ImageEncode();//Image Embedding
+                    this.SAMImageEncode();//Image Embedding
 
                     UI.Invoke(new Action(delegate
                     {
@@ -382,6 +472,12 @@ namespace SAMViewer
                     }));
                 });
                 thread.Start();
+
+                Thread threadclip = new Thread(() =>
+                {                   
+                    this.LoadClipONNXModel();
+                });
+                threadclip.Start();
             }
         }
 
