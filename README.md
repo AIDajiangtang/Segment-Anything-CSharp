@@ -13,9 +13,8 @@
 
  ## 源码编译</h2>  
  1.下载源码到本地  
- 2.Visual Studio打开.sln项目解决方案
+ 2.Visual Studio打开.sln项目解决方案  
  3.安装Nuget包  
- 
   3.1在Visual Studio中，鼠标右键单击项目并选择“管理NuGet程序包”。  
   3.2在“NuGet包管理器”窗口中，选择“浏览”选项卡。  
   3.3搜索Microsoft.ML.OnnxRuntime，选择1.15.1版本，点击安装  
