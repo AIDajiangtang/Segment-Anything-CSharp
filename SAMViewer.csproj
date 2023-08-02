@@ -4,7 +4,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{40F4316C-6274-4A8E-B228-C0213AB96C8B}</ProjectGuid>
+    <ProjectGuid>{275B56A9-C805-4EEA-8801-ABA2ACA54B8B}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <RootNamespace>SAMViewer</RootNamespace>
     <AssemblyName>SAMViewer</AssemblyName>
@@ -12,7 +12,10 @@
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
     <WarningLevel>4</WarningLevel>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <Deterministic>true</Deterministic>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -37,6 +40,8 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -49,12 +54,21 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="CLIP.cs" />
+    <Compile Include="ImageView.cs" />
+    <Compile Include="ImageView.Designer.cs">
+      <DependentUpon>ImageView.cs</DependentUpon>
+    </Compile>
+    <Compile Include="PromotionAnation.cs" />
+    <Compile Include="Promotions.cs" />
+    <Compile Include="SAM.cs" />
     <Compile Include="Transforms.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -70,8 +84,6 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PromotionAnation.cs" />
-    <Compile Include="Promotions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -96,6 +108,17 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MathNet.Numerics">
+      <Version>5.0.0</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime">
+      <Version>1.14.1</Version>
+    </PackageReference>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime.Managed">
+      <Version>1.15.0</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

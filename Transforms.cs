@@ -24,7 +24,7 @@ namespace SAMViewer
         /// 变换图像，将原始图像变换大小
         /// </summary>
         /// <returns></returns>
-        public float[] ApplyImage(string filename,int orgw,int orgh)
+        public float[] ApplyImage(string filename, int orgw, int orgh)
         {
             int neww = 0;
             int newh = 0;
@@ -63,26 +63,26 @@ namespace SAMViewer
             }
 
 
-            float[] transformedImg = new float[3*this.mTargetLength*this.mTargetLength];
-            for (int i =0 ;i< neww; i++ )
+            float[] transformedImg = new float[3 * this.mTargetLength * this.mTargetLength];
+            for (int i = 0; i < neww; i++)
             {
-                for (int j=0;j< newh; j++)
+                for (int j = 0; j < newh; j++)
                 {
                     int index = j * this.mTargetLength + i;
-                    transformedImg[index] = (resizeImg[0,i,j]- means[0])/ stdDev[0];
-                    transformedImg[this.mTargetLength * this.mTargetLength+index] = (resizeImg[1, i, j]-means[1])/ stdDev[1];
-                    transformedImg[2*this.mTargetLength * this.mTargetLength + index] = (resizeImg[2, i, j]-means[2]) / stdDev[2];
+                    transformedImg[index] = (resizeImg[0, i, j] - means[0]) / stdDev[0];
+                    transformedImg[this.mTargetLength * this.mTargetLength + index] = (resizeImg[1, i, j] - means[1]) / stdDev[1];
+                    transformedImg[2 * this.mTargetLength * this.mTargetLength + index] = (resizeImg[2, i, j] - means[2]) / stdDev[2];
                 }
             }
 
             return transformedImg;
         }
-        float[,,] Resize(string filename,int neww,int newh)
+        float[,,] Resize(string filename, int neww, int newh)
         {
 
             //加载原始图像
             Image originalImage = Image.FromFile(filename);
-           
+
             //创建新的Bitmap对象，并设置大小
             Bitmap resizedImage = new Bitmap(neww, newh);
 
@@ -92,15 +92,15 @@ namespace SAMViewer
 
             //将原始图像绘制到新的Bitmap对象中
             g.DrawImage(originalImage, new Rectangle(0, 0, neww, newh), new Rectangle(0, 0, originalImage.Width, originalImage.Height), GraphicsUnit.Pixel);
-            
+
             //保存新的图像
             //resizedImage.Save("resized.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-            float[,,] newimg = new float[3,neww, newh];
-            for (int i =0;i< neww;i++)
+            float[,,] newimg = new float[3, neww, newh];
+            for (int i = 0; i < neww; i++)
             {
-                for (int j =0;j< newh;j++)
+                for (int j = 0; j < newh; j++)
                 {
-                    newimg[0, i, j] = resizedImage.GetPixel(i,j).R;
+                    newimg[0, i, j] = resizedImage.GetPixel(i, j).R;
                     newimg[1, i, j] = resizedImage.GetPixel(i, j).G;
                     newimg[2, i, j] = resizedImage.GetPixel(i, j).B;
                 }
@@ -113,16 +113,16 @@ namespace SAMViewer
             return newimg;
         }
 
-        public PointPromotion ApplyCoords(PointPromotion org_point,int orgw,int orgh)
-        {          
+        public PointPromotion ApplyCoords(PointPromotion org_point, int orgw, int orgh)
+        {
             int neww = 0;
             int newh = 0;
-            this.GetPreprocessShape(orgw, orgh, this.mTargetLength,ref neww,ref newh);
+            this.GetPreprocessShape(orgw, orgh, this.mTargetLength, ref neww, ref newh);
             PointPromotion newpointp = new PointPromotion(org_point.m_Optype);
-            float scalx = 1.0f*neww / orgw;
+            float scalx = 1.0f * neww / orgw;
             float scaly = 1.0f * newh / orgh;
-            newpointp.X = (int)(org_point.X* scalx);
-            newpointp.Y = (int)(org_point.Y* scaly);
+            newpointp.X = (int)(org_point.X * scalx);
+            newpointp.Y = (int)(org_point.Y * scaly);
 
             return newpointp;
         }
@@ -138,9 +138,9 @@ namespace SAMViewer
             return box;
         }
 
-        void GetPreprocessShape(int oldw,int oldh,int long_side_length,ref int neww,ref int newh)
+        void GetPreprocessShape(int oldw, int oldh, int long_side_length, ref int neww, ref int newh)
         {
-            float scale = long_side_length * 1.0f / Math.Max(oldh,oldw);
+            float scale = long_side_length * 1.0f / Math.Max(oldh, oldw);
             float newht = oldh * scale;
             float newwt = oldw * scale;
 
