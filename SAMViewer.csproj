@@ -62,10 +62,6 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="CLIP.cs" />
-    <Compile Include="ImageView.cs" />
-    <Compile Include="ImageView.Designer.cs">
-      <DependentUpon>ImageView.cs</DependentUpon>
-    </Compile>
     <Compile Include="PromotionAnation.cs" />
     <Compile Include="Promotions.cs" />
     <Compile Include="SAM.cs" />
