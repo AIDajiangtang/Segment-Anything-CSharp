@@ -28,11 +28,12 @@
 
         <StackPanel Grid.Column="1" >
             <TextBlock x:Name="PromotionTypeTxt" Width="150" Height="30" Text="PromotionType:" HorizontalAlignment="Left" Margin="20,30,0,0"/>
-            <StackPanel x:Name="mPromotSP" Width="200" Height="100"  HorizontalAlignment="Left" Margin="50,0,0,0">
+            <StackPanel x:Name="mPromotSP" Width="200" Height="150"  HorizontalAlignment="Left" Margin="50,0,0,0">
                 <RadioButton x:Name="RPoint" Content="Point" GroupName="PromotionType" IsChecked="True"/>
                 <RadioButton x:Name="RBox" Content="Box" GroupName="PromotionType"  Margin="0,5,0,0"/>
-                <RadioButton x:Name="RText" Content="Text" GroupName="PromotionType" Margin="0,5,0,0"/>
-                <RadioButton x:Name="REverything" Content="Everything" GroupName="PromotionType" Margin="0,5,0,0"/>
+                <RadioButton x:Name="RText" Content="Text" GroupName="PromotionType" Margin="0,5,0,0" Click="RText_Click"/>
+                <TextBox x:Name="mTextinput" Margin="0,5,0,0" Height="50">a photo of</TextBox>
+                <RadioButton x:Name="REverything" Content="Everything" GroupName="PromotionType" Margin="0,5,0,0" Click="REveyything_Click"/>
             </StackPanel>
             <DockPanel x:Name="mOpTypeDP" Width="200" Height="50"  HorizontalAlignment="Left" Margin="50,0,0,0">
                 <RadioButton x:Name="RAdd" Content="Add Mask" GroupName="ProOperationType" IsChecked="True" />
@@ -40,8 +41,8 @@
             </DockPanel>
             <DockPanel  Width="230" Height="30"  HorizontalAlignment="Left" Margin="20,0,0,0">
                 <Button x:Name="BReset" Width="50" Height="30" Content="Reset" Click="BReset_Click"/>
-                <Button x:Name="BUndo"  Width="50" Height="30" Content="Undo"  Margin="10,0,0,0"/>
-                <Button x:Name="BRedo"  Width="50" Height="30" Content="Redo"  Margin="10,0,0,0"/>
+                <Button x:Name="BUndo"  Width="50" Height="30" Content="Undo"  Margin="10,0,0,0" Click="BUndo_Click"/>
+                <Button x:Name="BRedo"  Width="50" Height="30" Content="Redo"  Margin="10,0,0,0" Click="BRedo_Click"/>
                 <Button x:Name="BReLoad"  Width="50" Height="30" Content="Reload"  Margin="10,0,0,0" Click="BReLoad_Click"/>
             </DockPanel>
             <TextBlock x:Name="StatusTxt" Width="250" TextWrapping="Wrap" VerticalAlignment="Bottom" Foreground="Red"  Margin="0,50,0,0"/>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Controls;
 
 namespace SAMViewer
 {
@@ -14,6 +15,7 @@ namespace SAMViewer
 
     public abstract class Promotion
     {
+        public UserControl mAnation;
         public abstract float[] GetInput();
         public abstract float[] GetLable();
         public PromotionType mType;
@@ -23,6 +25,7 @@ namespace SAMViewer
     /// </summary>
     public class PointPromotion: Promotion
     {
+
         public PointPromotion(OpType optype)
         {
             this.mType = PromotionType.Point;

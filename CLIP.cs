@@ -20,7 +20,7 @@ namespace SAMViewer
         InferenceSession mTxtEncoder;
         InferenceSession mImgEncoder;
         public static CLIP theSingleton = null;
-
+        int contextLength = 77;
         protected CLIP()
         {
             Thread thread = new Thread(() =>
@@ -73,30 +73,8 @@ namespace SAMViewer
         /// </summary>
         public List<float> TxtEncoder(string txt)
         {
-            //"a diagram", "a dog", "a cat"
-            List<Int64> token = new List<Int64>() {
-              49406,320,22697,49407,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,
-              49406,320,1929,49407,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,
-              49406,320,2368,49407,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0,0,0,0,0,0,0,0,
-              0,0,0,0,0 };
-            var txt_tensor = new DenseTensor<Int64>(token.ToArray(), new[] { 3, 77 });
+            List<Int64> token = SimpleTokenizer.Instance().tolikenlize(txt);
+            var txt_tensor = new DenseTensor<Int64>(token.ToArray(), new[] { 1,contextLength });
             var inputs = new List<NamedOnnxValue>
             {
                 NamedOnnxValue.CreateFromTensor("input", txt_tensor)
@@ -105,7 +83,7 @@ namespace SAMViewer
             var results = this.mTxtEncoder.Run(inputs);
             var result = results.First().AsTensor<float>().ToArray();
 
-            return new List<float>();
+            return result.ToList();
         }
         /// <summary>
         /// CLIP对图像进行编码

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
-using MathNet.Numerics.Statistics;
+using OpenCvSharp;
 
 namespace SAMViewer
 {
@@ -24,44 +24,27 @@ namespace SAMViewer
         /// 变换图像，将原始图像变换大小
         /// </summary>
         /// <returns></returns>
-        public float[] ApplyImage(string filename, int orgw, int orgh)
+        public float[] ApplyImage(Mat image, int orgw, int orgh)
         {
             int neww = 0;
             int newh = 0;
             this.GetPreprocessShape(orgw, orgh, this.mTargetLength, ref neww, ref newh);
 
-            float[,,] resizeImg = this.Resize(filename, neww, newh);
+            // 缩放图像
+            Mat resizedImage = new Mat();
+            Cv2.Resize(image, resizedImage, new OpenCvSharp.Size(neww, newh));
+            //将图像转换为浮点型
+            Mat floatImage = new Mat();
+            resizedImage.ConvertTo(floatImage, MatType.CV_32FC3);
 
-            //计算均值
-            float[] means = new float[resizeImg.GetLength(0)];
-            for (int i = 0; i < resizeImg.GetLength(0); i++)
-            {
-                float[] data = new float[resizeImg.GetLength(1) * resizeImg.GetLength(2)];
-                for (int j = 0; j < resizeImg.GetLength(1); j++)
-                {
-                    for (int k = 0; k < resizeImg.GetLength(2); k++)
-                    {
-                        data[j * resizeImg.GetLength(2) + k] = resizeImg[i, j, k];
-                    }
-                }
-                means[i] = (float)MathNet.Numerics.Statistics.Statistics.Mean(data);
-            }
+            // 计算均值和标准差
+            Scalar mean, stddev;
+            Cv2.MeanStdDev(floatImage, out mean, out stddev);
 
-            //计算标准差
-            float[] stdDev = new float[resizeImg.GetLength(0)];
-            for (int i = 0; i < resizeImg.GetLength(0); i++)
-            {
-                float[] data = new float[resizeImg.GetLength(1) * resizeImg.GetLength(2)];
-                for (int j = 0; j < resizeImg.GetLength(1); j++)
-                {
-                    for (int k = 0; k < resizeImg.GetLength(2); k++)
-                    {
-                        data[j * resizeImg.GetLength(2) + k] = resizeImg[i, j, k];
-                    }
-                }
-                stdDev[i] = (float)MathNet.Numerics.Statistics.Statistics.StandardDeviation(data);
-            }
-
+            // 标准化图像
+            Mat normalizedImage = new Mat();
+            Cv2.Subtract(floatImage, mean, normalizedImage);
+            Cv2.Divide(normalizedImage, stddev, normalizedImage);
 
             float[] transformedImg = new float[3 * this.mTargetLength * this.mTargetLength];
             for (int i = 0; i < neww; i++)
@@ -69,50 +52,18 @@ namespace SAMViewer
                 for (int j = 0; j < newh; j++)
                 {
                     int index = j * this.mTargetLength + i;
-                    transformedImg[index] = (resizeImg[0, i, j] - means[0]) / stdDev[0];
-                    transformedImg[this.mTargetLength * this.mTargetLength + index] = (resizeImg[1, i, j] - means[1]) / stdDev[1];
-                    transformedImg[2 * this.mTargetLength * this.mTargetLength + index] = (resizeImg[2, i, j] - means[2]) / stdDev[2];
+                    transformedImg[index] = normalizedImage.At<Vec3f>(j, i)[0];
+                    transformedImg[this.mTargetLength * this.mTargetLength + index] = normalizedImage.At<Vec3f>(j, i)[1];
+                    transformedImg[2 * this.mTargetLength * this.mTargetLength + index] = normalizedImage.At<Vec3f>(j, i)[2];
                 }
             }
+            resizedImage.Dispose();
+            floatImage.Dispose();
+            normalizedImage.Dispose();
 
             return transformedImg;
         }
-        float[,,] Resize(string filename, int neww, int newh)
-        {
-
-            //加载原始图像
-            Image originalImage = Image.FromFile(filename);
-
-            //创建新的Bitmap对象，并设置大小
-            Bitmap resizedImage = new Bitmap(neww, newh);
-
-            //创建Graphics对象，并设置插值模式
-            Graphics g = Graphics.FromImage(resizedImage);
-            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-
-            //将原始图像绘制到新的Bitmap对象中
-            g.DrawImage(originalImage, new Rectangle(0, 0, neww, newh), new Rectangle(0, 0, originalImage.Width, originalImage.Height), GraphicsUnit.Pixel);
-
-            //保存新的图像
-            //resizedImage.Save("resized.jpg", System.Drawing.Imaging.ImageFormat.Jpeg);
-            float[,,] newimg = new float[3, neww, newh];
-            for (int i = 0; i < neww; i++)
-            {
-                for (int j = 0; j < newh; j++)
-                {
-                    newimg[0, i, j] = resizedImage.GetPixel(i, j).R;
-                    newimg[1, i, j] = resizedImage.GetPixel(i, j).G;
-                    newimg[2, i, j] = resizedImage.GetPixel(i, j).B;
-                }
-            }
-            //释放资源
-            originalImage.Dispose();
-            resizedImage.Dispose();
-            g.Dispose();
-
-            return newimg;
-        }
-
+      
         public PointPromotion ApplyCoords(PointPromotion org_point, int orgw, int orgh)
         {
             int neww = 0;

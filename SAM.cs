@@ -1,5 +1,6 @@
 ﻿using Microsoft.ML.OnnxRuntime;
 using Microsoft.ML.OnnxRuntime.Tensors;
+using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -8,6 +9,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media.Imaging;
 
 namespace SAMViewer
 {
@@ -19,10 +21,11 @@ namespace SAMViewer
         public static SAM theSingleton = null;
         InferenceSession mEncoder;
         InferenceSession mDecoder;
-        float[] mImgEmbedding;
+
         bool mReady = false;
         protected SAM()
         {
+           
         }
         public static SAM Instance()
         {
@@ -63,11 +66,11 @@ namespace SAMViewer
         /// <summary>
         /// Segment Anything对图像进行编码
         /// </summary>
-        public void Encode(string imgfile,int orgWid,int orgHei)
+        public float[] Encode(Mat image,int orgWid,int orgHei)
         {
             Transforms tranform = new Transforms(1024);
-            float[] img = tranform.ApplyImage(imgfile, orgWid, orgHei);
 
+            float[] img = tranform.ApplyImage(image, orgWid, orgHei);          
             var tensor = new DenseTensor<float>(img, new[] { 1, 3, 1024, 1024 });
             var inputs = new List<NamedOnnxValue>
             {
@@ -75,13 +78,15 @@ namespace SAMViewer
             };
 
             var results = this.mEncoder.Run(inputs);
-            this.mImgEmbedding = results.First().AsTensor<float>().ToArray();
+            var embedding = results.First().AsTensor<float>().ToArray();
             this.mReady = true;
+
+            return embedding;
         }
         /// <summary>
         /// Segment Anything提示信息解码
         /// </summary>
-        public float[] Decode(List<Promotion> promotions, int orgWid, int orgHei)
+        public float[] Decode(List<Promotion> promotions, float[] embedding, int orgWid, int orgHei)
         {
             if (this.mReady == false)
             {
@@ -89,7 +94,7 @@ namespace SAMViewer
                 return null;
             }
 
-            var embedding_tensor = new DenseTensor<float>(this.mImgEmbedding, new[] { 1, 256, 64, 64 });
+            var embedding_tensor = new DenseTensor<float>(embedding, new[] { 1, 256, 64, 64 });
 
             var bpmos = promotions.FindAll(e => e.mType == PromotionType.Box);
             var pproms = promotions.FindAll(e => e.mType == PromotionType.Point);
@@ -156,5 +161,7 @@ namespace SAMViewer
             return outputmask;
            
         }
+
     }
+    
 }
