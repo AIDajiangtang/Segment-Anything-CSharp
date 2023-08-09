@@ -20,7 +20,7 @@ This project consists of two parts:
    3.3 Search for Microsoft.ML.OnnxRuntime, select version 1.15.1, and click Install<br />
    3.4 Search for OpenCvSharp4, select version 4.8.0, and click Install<br />
    3.5 Search for OpenCvSharp4.runtime.win, select version 4.8.0, and click Install<br />
-  4. Put decoder-quant.onnx and encoder-quant.onnx in the exe path<br />
+  4. Put decoder-quant.onnx , encoder-quant.onnx ,visual.onnx and textual.onnx in the exe path<br />
   5. Run the program<br />
 
 Effect demo:
