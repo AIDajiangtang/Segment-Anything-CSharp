@@ -18,8 +18,8 @@
   3.1在Visual Studio中，鼠标右键单击项目并选择“管理NuGet程序包”。  
   3.2在“NuGet包管理器”窗口中，选择“浏览”选项卡。  
   3.3搜索Microsoft.ML.OnnxRuntime，选择1.15.1版本，点击安装  
-  3.4搜索MathNet.Numerics，选择5.0.0版本，点击安装  
-  3.5MathNet.Numerics用于计算图像均值和方差，要求.Net Framework4.6.1以上版本，也可以自己实现，进而去掉这个依赖  
+  3.4搜索OpenCvSharp4,选择4.8.0版本，点击安装  
+  3.5搜索OpenCvSharp4.runtime.win,选择4.8.0版本，点击安装  
  4.将decoder-quant.onnx和encoder-quant.onnx放到exe路径下  
  5.运行程序
 
