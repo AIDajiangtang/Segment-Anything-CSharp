@@ -20,7 +20,7 @@
   3.3搜索Microsoft.ML.OnnxRuntime，选择1.15.1版本，点击安装  
   3.4搜索OpenCvSharp4,选择4.8.0版本，点击安装  
   3.5搜索OpenCvSharp4.runtime.win,选择4.8.0版本，点击安装  
- 4.将decoder-quant.onnx和encoder-quant.onnx放到exe路径下  
+ 4.将decoder-quant.onnx,encoder-quant.onnx,textual.onnx,visual.onnx放到exe路径下  
  5.运行程序
 
  效果演示：   
