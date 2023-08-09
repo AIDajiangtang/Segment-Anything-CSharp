@@ -37,6 +37,8 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -49,12 +51,14 @@
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
     <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AutoSAM.cs" />
     <Compile Include="Transforms.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -71,7 +75,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="PromotionAnation.cs" />
+    <Compile Include="SimpleTokenizer.cs" />
     <Compile Include="CLIP.cs" />
+    <Compile Include="MaskData.cs" />
     <Compile Include="SAM.cs" />
     <Compile Include="Promotions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
