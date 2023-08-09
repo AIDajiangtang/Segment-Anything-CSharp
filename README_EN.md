@@ -12,15 +12,16 @@ This project consists of two parts:
 2. Use C# language to load the model, perform inference, and use WPF for interaction and display.
 
 ## Source code compilation</h2>
-  1. Download the source code to the local
-  2. Install the Nuget package
-  In Visual Studio, right-click on the project and select "Manage NuGet Packages".
-  In the NuGet Package Manager window, select the Browse tab.
-  Search for Microsoft.ML.OnnxRuntime, select version 1.15.1, and click Install
-  Search for MathNet.Numerics, select version 5.0.0, and click Install
-  MathNet.Numerics is used to calculate the mean and variance of images. It requires .Net Framework 4.6.1 or above, and it can also be implemented by itself, thereby removing this dependency.
-  3. Put decoder-quant.onnx and encoder-quant.onnx in the exe path
-  4. Run the program
+1. Download the source code to the local<br />
+2.Visual Studio opens the .sln project solution<br />
+3. Install the Nuget package<br />
+   3.1 In Visual Studio, right-click on the project and select "Manage NuGet Packages".<br />
+   3.2 In the "NuGet Package Manager" window, select the "Browse" tab.<br />
+   3.3 Search for Microsoft.ML.OnnxRuntime, select version 1.15.1, and click Install<br />
+   3.4 Search for OpenCvSharp4, select version 4.8.0, and click Install<br />
+   3.5 Search for OpenCvSharp4.runtime.win, select version 4.8.0, and click Install<br />
+  4. Put decoder-quant.onnx and encoder-quant.onnx in the exe path<br />
+  5. Run the program<br />
 
 Effect demo:
 
