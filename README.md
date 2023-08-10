@@ -38,6 +38,4 @@ Text Promot:展开text栏，先自动分割，然后借助CLIP计算自动分割
 关注微信公众号：**人工智能大讲堂**    
 <img width="180" src="https://user-images.githubusercontent.com/18625471/228743333-77abe467-2385-476d-86a2-e232c6482291.jpg">  
 
-To do  
-everything  
-text promot  
+
