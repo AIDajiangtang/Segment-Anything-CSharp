@@ -99,7 +99,7 @@ namespace SAMViewer
             var results = this.mImgEncoder.Run(inputs);
             var result = results.First().AsTensor<float>().ToArray();
 
-            return new List<float>();
+            return result.ToList();
         }
     }
 }

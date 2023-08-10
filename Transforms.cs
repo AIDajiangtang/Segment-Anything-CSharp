@@ -89,7 +89,7 @@ namespace SAMViewer
             return box;
         }
 
-        void GetPreprocessShape(int oldw, int oldh, int long_side_length, ref int neww, ref int newh)
+        public void GetPreprocessShape(int oldw, int oldh, int long_side_length, ref int neww, ref int newh)
         {
             float scale = long_side_length * 1.0f / Math.Max(oldh, oldw);
             float newht = oldh * scale;

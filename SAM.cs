@@ -21,7 +21,7 @@ namespace SAMViewer
         public static SAM theSingleton = null;
         InferenceSession mEncoder;
         InferenceSession mDecoder;
-
+        public float mask_threshold = 0.0f;
         bool mReady = false;
         protected SAM()
         {
@@ -83,10 +83,11 @@ namespace SAMViewer
 
             return embedding;
         }
+
         /// <summary>
         /// Segment Anything提示信息解码
         /// </summary>
-        public float[] Decode(List<Promotion> promotions, float[] embedding, int orgWid, int orgHei)
+        public MaskData Decode(List<Promotion> promotions, float[] embedding, int orgWid, int orgHei)
         {
             if (this.mReady == false)
             {
@@ -155,13 +156,17 @@ namespace SAMViewer
                 NamedOnnxValue.CreateFromTensor("has_mask_input", hasMaskValues_tensor),
                 NamedOnnxValue.CreateFromTensor("orig_im_size", orig_im_size_values_tensor)
             };
+            MaskData md = new MaskData();
+            var segmask = this.mDecoder.Run(decode_inputs).ToList();
+            md.mMask = segmask[0].AsTensor<float>().ToArray().ToList();
+            md.mShape = segmask[0].AsTensor<float>().Dimensions.ToArray();
+            md.mIoU = segmask[1].AsTensor<float>().ToList();
+            return md;
 
-            var segmask = this.mDecoder.Run(decode_inputs);
-            var outputmask = segmask.First().AsTensor<float>().ToArray();
-            return outputmask;
-           
         }
 
     }
-    
+
 }
+    
+

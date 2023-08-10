@@ -18,10 +18,10 @@ namespace SAMViewer
     /// </summary>
     class SAMAutoMask
     {
-        int points_per_side = 32;
+        public int points_per_side = 4;
         int points_per_batch = 64;
-        float pred_iou_thresh = 0.88f;
-        float stability_score_thresh = 0.95f;
+        public float pred_iou_thresh = 0.88f;
+        public float stability_score_thresh = 0.95f;
         float stability_score_offset = 1.0f;
         float box_nms_thresh = 0.7f;
         int crop_n_layers = 0;
@@ -32,9 +32,10 @@ namespace SAMViewer
         int min_mask_region_area = 0;
         string output_mode = "binary_mask";
         Mat mImage;
-        SAM mSAM = SAM.Instance();
-        float[] mImgEmbedding;
-        public SAMAutoMask(int points_per_side = 32,
+        public SAM mSAM;
+        public float[] mImgEmbedding;
+
+        public SAMAutoMask(int points_per_side = 4,
                             int points_per_batch = 64,
                             float pred_iou_thresh = 0.88f,
                             float stability_score_thresh = 0.95f,
@@ -75,9 +76,6 @@ namespace SAMViewer
                 crop_n_layers,
                 crop_n_points_downscale_factor);
             }
-
-
-
         }
         /// <summary>
         /// 创建网格
@@ -119,8 +117,7 @@ namespace SAMViewer
             return points;
         }
 
-      
-
+     
         /// <summary>
         ///  Generates a list of crop boxes of different sizes. Each layer
         ///  has(2**i)**2 boxes for the ith layer.
@@ -199,15 +196,25 @@ namespace SAMViewer
                 yield return batch;
             }
         }
-        public List<float[]> Generate(string imgfile)
+        public MaskData Generate(string imgfile)
         {
+            if (this.mImage != null)
+                this.mImage.Dispose();
+
             this.mImage = Cv2.ImRead(imgfile, ImreadModes.Color);
-            List<float[]> masks = this._generate_masks(this.mImage);
+            if (points_per_side != 0)
+            {
+                this.point_grids = build_all_layer_point_grids(
+                points_per_side,
+                crop_n_layers,
+                crop_n_points_downscale_factor);
+            }
+            MaskData masks = this._generate_masks(this.mImage);
             return masks;
         }
-        List<float[]> _generate_masks(Mat img)
+        MaskData _generate_masks(Mat img)
         {
-            List<float[]> masks = new List<float[]>();
+            MaskData masks = new MaskData();
             List<List<int>> crop_boxes = new List<List<int>>();
             List<int> layer_idxs = new List<int>();
 
@@ -215,23 +222,23 @@ namespace SAMViewer
 
             for (int i = 0; i < crop_boxes.Count; i++)
             {
-                List<float[]> mask = this._process_crop(crop_boxes[i], layer_idxs[i]);
-                masks.AddRange(mask);
+                MaskData mask = this._process_crop(crop_boxes[i], layer_idxs[i]);
+                masks.Cat(mask);
             }
 
             return masks;
         }
 
-        List<float[]> _process_crop(List<int> crop_box, int crop_layer_idx)
+        MaskData _process_crop(List<int> crop_box, int crop_layer_idx)
         {
-            List<float[]> masks = new List<float[]>();
+            MaskData masks = new MaskData();
             int x0 = crop_box[0], y0 = crop_box[1], x1 = crop_box[2], y1 = crop_box[3];
             // 定义ROI的矩形区域
             OpenCvSharp.Rect roiRect = new OpenCvSharp.Rect(x0, y0, x1, y1); // (x, y, width, height)
             // 提取ROI区域
             Mat roiImage = new Mat(this.mImage, roiRect);
             //图像编码
-            this.mImgEmbedding = this.mSAM.Encode(roiImage, roiImage.Cols, roiImage.Rows);
+            //this.mImgEmbedding = this.mSAM.Encode(roiImage, roiImage.Cols, roiImage.Rows);
 
             double[,] gps = this.point_grids[crop_layer_idx];
             PointPromotion[] points_for_image = new PointPromotion[gps.GetLength(0)];
@@ -239,39 +246,41 @@ namespace SAMViewer
             for (int i = 0; i < gps.GetLength(0); i++)
             {
                 Promotion promt = new PointPromotion(OpType.ADD);
-                (promt as PointPromotion).X = (int)gps[i, 0] * roiImage.Cols;
-                (promt as PointPromotion).Y = (int)gps[i, 1] * roiImage.Rows;
+                (promt as PointPromotion).X = (int)(gps[i, 0] * roiImage.Cols);
+                (promt as PointPromotion).Y = (int)(gps[i, 1] * roiImage.Rows);
                 PointPromotion ptn = ts.ApplyCoords((promt as PointPromotion), roiImage.Cols, roiImage.Rows);
                 points_for_image[i] = ptn;
             }
             object[] args = { points_for_image };
             foreach (var v in BatchIterator(this.points_per_batch, args))
             {
-                List<float[]> mask = this._process_batch(v.ToList(), roiImage.Cols, roiImage.Rows, crop_box, this.mImage.Cols, this.mImage.Rows);
-                masks.AddRange(mask);
+                MaskData mask = this._process_batch(v.ToList(), roiImage.Cols, roiImage.Rows, crop_box, this.mImage.Cols, this.mImage.Rows);
+                masks.Cat(mask);
             }
-
+            roiImage.Dispose();
             return masks;
-        }      
+        }
 
-        List<float[]> _process_batch(List<object> points,int cropimgwid,int cropimghei,List<int>cropbox,
+        MaskData _process_batch(List<object> points,int cropimgwid,int cropimghei,List<int>cropbox,
             int orgimgwid, int orgimghei)
         {
+            MaskData batch = new MaskData();
             List<float[]> masks = new List<float[]>();
-            List<Promotion> ps = new List<Promotion>();
             foreach (var v in points)
             {
                 PointPromotion[] pts = v as PointPromotion[];
                 for (int i=0;i<pts.Length;i++)
                 {
-                    ps.Add(pts[i]);
+                    MaskData md = this.mSAM.Decode(new List<Promotion>() { pts[i] }, this.mImgEmbedding, cropimgwid, cropimghei);
+                    md.mStalibility = md.CalculateStabilityScore(this.mSAM.mask_threshold, this.stability_score_offset).ToList();
+                    md.Filter(this.pred_iou_thresh, this.stability_score_thresh);
+                    batch.Cat(md);
                 }
-                float[] mask = this.mSAM.Decode(ps, this.mImgEmbedding, cropimgwid, cropimghei);
-                masks.Add(mask);
+                          
             }
-            return masks;
 
-
+            batch.mBox = batch.batched_mask_to_box().ToList();
+            return batch;
         }
 
     }

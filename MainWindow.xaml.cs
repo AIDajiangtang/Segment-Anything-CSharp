@@ -8,6 +8,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using System.Linq;
 
 namespace SAMViewer
 {
@@ -30,7 +31,9 @@ namespace SAMViewer
         private Stack<Promotion> mUndoStack = new Stack<Promotion>();
         private Stack<Promotion> mRedoStack = new Stack<Promotion>();
         Dispatcher UI;
-
+        SAMAutoMask mAutoMask;
+        MaskData mAutoMaskData;
+        Operation mCurOp;
         // 构造函数
         public MainWindow()
         {
@@ -43,6 +46,7 @@ namespace SAMViewer
             this.mMask.Height = this.Height;
 
             this.UI = Dispatcher.CurrentDispatcher;
+
         }
 
         /// <summary>
@@ -60,7 +64,7 @@ namespace SAMViewer
         {  
             // 如果当前没有选中的标注，创建一个点标注
             this.mImage.CaptureMouse();
-            if (RPoint.IsChecked == true)
+            if (this.mCurOp == Operation.Point)
             {
 
                 OpType type = this.RAdd.IsChecked == true ? OpType.ADD : OpType.REMOVE;
@@ -74,7 +78,7 @@ namespace SAMViewer
                
                 Promotion promt = new PointPromotion(type);
                 Point clickPoint = e.GetPosition(this.mImage);
-                Point orgImgPoint = this.TranslateOrgImgPoint(clickPoint);
+                Point orgImgPoint = this.Window2Image(clickPoint);
                 (promt as PointPromotion).X = (int)orgImgPoint.X;
                 (promt as PointPromotion).Y = (int)orgImgPoint.Y;
              
@@ -86,12 +90,12 @@ namespace SAMViewer
                 this.mPromotionList.Add(ptn);
                 Thread thread = new Thread(() =>
                 {
-                    float[] mask = this.mSam.Decode(this.mPromotionList, this.mImgEmbedding, this.mOrgwid, this.mOrghei);
-                    this.ShowMask(mask, Color.FromArgb((byte)100, (byte)255, (byte)0, (byte)0));
+                    MaskData md = this.mSam.Decode(this.mPromotionList, this.mImgEmbedding, this.mOrgwid, this.mOrghei);
+                    this.ShowMask(md.mMask.ToArray(), Color.FromArgb((byte)100, (byte)255, (byte)0, (byte)0));
                 });
                 thread.Start();
             }
-            else if (RBox.IsChecked == true)
+            else if (this.mCurOp == Operation.Box)
             {
                 _startPoint = e.GetPosition(this.ImgCanvas);
                 this.mCurRectAnno = new RectAnnotation
@@ -104,7 +108,7 @@ namespace SAMViewer
                 this.ImgCanvas.Children.Add(this.mCurRectAnno);
 
                 Point clickPoint = e.GetPosition(this.mImage);
-                Point orgImgPoint = this.TranslateOrgImgPoint(clickPoint);
+                Point orgImgPoint = this.Window2Image(clickPoint);
                 this.mCurRectAnno.LeftUP = orgImgPoint;
             }
 
@@ -132,7 +136,7 @@ namespace SAMViewer
                 return;
         
             Point clickPoint = e.GetPosition(this.mImage);
-            Point orgImgPoint = this.TranslateOrgImgPoint(clickPoint);
+            Point orgImgPoint = this.Window2Image(clickPoint);
             this.mCurRectAnno.RightBottom = orgImgPoint;
 
             BoxPromotion promt = new BoxPromotion();
@@ -148,9 +152,9 @@ namespace SAMViewer
             this.mUndoStack.Push(pb);
             this.mPromotionList.Add(pb);
             Thread thread = new Thread(() =>
-            {              
-                float[] mask = this.mSam.Decode(this.mPromotionList, this.mImgEmbedding,this.mOrgwid,this.mOrghei);
-                this.ShowMask(mask, Color.FromArgb((byte)100, (byte)255, (byte)0, (byte)0));
+            {
+                MaskData md = this.mSam.Decode(this.mPromotionList, this.mImgEmbedding,this.mOrgwid,this.mOrghei);
+                this.ShowMask(md.mMask.ToArray(), Color.FromArgb((byte)100, (byte)255, (byte)0, (byte)0));
             });
             thread.Start();
             this.mCurRectAnno = null;
@@ -196,6 +200,10 @@ namespace SAMViewer
                     // 读取图像
                     OpenCvSharp.Mat image = OpenCvSharp.Cv2.ImRead(this.mImagePath, OpenCvSharp.ImreadModes.Color);
                     this.mImgEmbedding = this.mSam.Encode(image, this.mOrgwid, this.mOrghei);//Image Embedding
+
+                    this.mAutoMask = new SAMAutoMask();
+                    this.mAutoMask.mImgEmbedding = this.mImgEmbedding;
+                    this.mAutoMask.mSAM = this.mSam;
                     image.Dispose();
                     UI.Invoke(new Action(delegate
                     {
@@ -212,34 +220,31 @@ namespace SAMViewer
             this.LoadImgGrid.Visibility = Visibility.Visible;
             this.ImgCanvas.Visibility = Visibility.Hidden;
         }
-        /// <summary>
-        /// Auto Segment
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void REveyything_Click(object sender, RoutedEventArgs e)
-        {
 
-            SAMAutoMask au = new SAMAutoMask();
-            var masks = au.Generate(this.mImagePath);
-
-            Random random = new Random();
-            Color randomColor = Color.FromArgb((byte)100, (byte)random.Next(256), (byte)random.Next(256), (byte)random.Next(256));
-            foreach (var mask in masks)
-            {
-                this.ShowMask(mask, randomColor);
-                break;
-            }
-        }
-        /// <summary>
-        /// Text Promote
-        /// </summary>
-        private void RText_Click(object sender, RoutedEventArgs e)
+        double CalculateCosineSimilarity(List<float> vector1, List<float> vector2)
         {
-            var txtEmbedding = this.mCLIP.TxtEncoder(this.mTextinput.Text);
-            MessageBox.Show(string.Join(" ", txtEmbedding));
+            double dotProduct = DotProduct(vector1, vector2);
+            double magnitude1 = Magnitude(vector1);
+            double magnitude2 = Magnitude(vector2);
+
+            if (magnitude1 == 0 || magnitude2 == 0)
+                return 0;
+
+            return dotProduct / (magnitude1 * magnitude2);
         }
 
+        double DotProduct(List<float> vector1, List<float> vector2)
+        {          
+            return vector1.Zip(vector2, (a, b) => a * b).Sum();
+        }
+
+        static double Magnitude(List<float> vector)
+        {
+            return Math.Sqrt(vector.Select(x => x * x).Sum());
+        }
+        /// <summary>
+        /// 撤销
+        /// </summary>
         private void BUndo_Click(object sender, RoutedEventArgs e)
         {
             if (this.mUndoStack.Count > 0)
@@ -252,8 +257,8 @@ namespace SAMViewer
                 
                 Thread thread = new Thread(() =>
                 {
-                    float[] mask = this.mSam.Decode(this.mPromotionList, this.mImgEmbedding, this.mOrgwid, this.mOrghei);
-                    this.ShowMask(mask, Color.FromArgb((byte)100, (byte)255, (byte)0, (byte)0));
+                    MaskData md = this.mSam.Decode(this.mPromotionList, this.mImgEmbedding, this.mOrgwid, this.mOrghei);
+                    this.ShowMask(md.mMask.ToArray(), Color.FromArgb((byte)100, (byte)255, (byte)0, (byte)0));
                 });
                 thread.Start();
             }
@@ -261,9 +266,10 @@ namespace SAMViewer
             {
                 MessageBox.Show("No Undo Promot");
             }
-
         }
-
+        /// <summary>
+        /// 重做
+        /// </summary>
         private void BRedo_Click(object sender, RoutedEventArgs e)
         {
             if (this.mRedoStack.Count > 0)
@@ -275,8 +281,8 @@ namespace SAMViewer
                 this.mPromotionList.AddRange(this.mUndoStack.ToArray());
                 Thread thread = new Thread(() =>
                 {
-                    float[] mask = this.mSam.Decode(this.mPromotionList, this.mImgEmbedding, this.mOrgwid, this.mOrghei);
-                    this.ShowMask(mask, Color.FromArgb((byte)100, (byte)255, (byte)0, (byte)0));
+                    MaskData md = this.mSam.Decode(this.mPromotionList, this.mImgEmbedding, this.mOrgwid, this.mOrghei);
+                    this.ShowMask(md.mMask.ToArray(), Color.FromArgb((byte)100, (byte)255, (byte)0, (byte)0));
                 });
                 thread.Start();
             }
@@ -284,7 +290,6 @@ namespace SAMViewer
             {
                 MessageBox.Show("No Redo Promot");
             }
-
         }
         /// <summary>
         /// 复位
@@ -310,7 +315,7 @@ namespace SAMViewer
                     for (int x = 0; x < this.mOrgwid; x++)
                     {
                         int ind = y * this.mOrgwid + x;
-                        if (mask[ind] > 0)
+                        if (mask[ind] > this.mSam.mask_threshold)
                         {
                             pixelData[4 * ind] = color.B;  // Blue
                             pixelData[4 * ind + 1] = color.G;  // Green
@@ -325,10 +330,63 @@ namespace SAMViewer
                 this.mMask.Source = bp;
             }));
         }
+
+        /// <summary>
+        /// 显示分割结果
+        /// </summary>
+        void ShowMask(MaskData mask)
+        {
+            UI.Invoke(new Action(delegate
+            {
+                this.ShowStatus("Finish");
+                this.ClearAnation();
+                WriteableBitmap bp = new WriteableBitmap(this.mOrgwid, this.mOrghei, 96, 96, PixelFormats.Pbgra32, null);
+                // 设置像素数据，将所有像素的透明度设置为半透明
+                byte[] pixelData = new byte[this.mOrgwid * this.mOrghei * 4];
+                Array.Clear(pixelData, 0, pixelData.Length);
+                for (int i =0;i< mask.mShape[1];i++)
+                {
+                    Random random = new Random();
+                    Color randomColor = Color.FromArgb((byte)100, (byte)random.Next(256), (byte)random.Next(256), (byte)random.Next(256));
+                    for (int y = 0; y < this.mOrghei; y++)
+                    {
+                        for (int x = 0; x < this.mOrgwid; x++)
+                        {
+                            //int ind = i* this.mOrghei* this.mOrgwid+y * this.mOrgwid + x;
+                            //int indpixel = y * this.mOrgwid + x;
+                            //if (mask.mMask[ind] > this.mSam.mask_threshold)
+
+                            int indpixel = y * this.mOrgwid + x;
+                            if (mask.mfinalMask[i][indpixel] > this.mSam.mask_threshold)
+                            {
+                                pixelData[4 * indpixel] = randomColor.B;  // Blue
+                                pixelData[4 * indpixel + 1] = randomColor.G;  // Green
+                                pixelData[4 * indpixel + 2] = randomColor.R;  // Red
+                                pixelData[4 * indpixel + 3] = 100;  // Alpha
+                            }
+                        }
+                    }
+                    Point leftup = this.Image2Window(new Point(mask.mBox[4 * i], mask.mBox[4 * i+1]));
+                    Point rightdown = this.Image2Window(new Point(mask.mBox[4 * i+2], mask.mBox[4 * i +3]));
+                    RectAnnotation box = new RectAnnotation();
+                    this.ImgCanvas.Children.Add(box);
+                    box.Width = rightdown.X - leftup.X;
+                    box.Height = rightdown.Y - leftup.Y;
+                    Canvas.SetLeft(box, leftup.X);
+                    Canvas.SetTop(box, leftup.Y);
+
+                  
+                }
+              
+                bp.WritePixels(new Int32Rect(0, 0, this.mOrgwid, this.mOrghei), pixelData, this.mOrgwid * 4, 0);
+                // 创建一个BitmapImage对象，将WriteableBitmap作为源
+                this.mMask.Source = bp;
+            }));
+        }
         /// <summary>
         /// 窗口坐标转图像坐标
         /// </summary>
-        Point TranslateOrgImgPoint(Point clickPoint)
+        Point Window2Image(Point clickPoint)
         {
             double imageWidth = this.mImage.ActualWidth;
             double imageHeight = this.mImage.ActualHeight;
@@ -341,6 +399,24 @@ namespace SAMViewer
             Point p = new Point();
             p.X = (int)imageX;
             p.Y = (int)imageY;
+
+            return p;
+        }
+        Point Image2Window(Point image)
+        {
+            double imageWidth = this.mImage.ActualWidth;
+            double imageHeight = this.mImage.ActualHeight;
+            double scaleX = imageWidth / this.mOrgwid;
+            double scaleY = imageHeight / this.mOrghei;
+            double offsetX = (imageWidth - scaleX * this.mOrgwid) / 2;
+            double offsetY = (imageHeight - scaleY * this.mOrghei) / 2;
+
+            double windowsX = image.X * scaleX + offsetX;
+            double windowsY = image.Y * scaleY + offsetX;
+
+            Point p = new Point();
+            p.X = (int)windowsX;
+            p.Y = (int)windowsY;
 
             return p;
         }
@@ -382,14 +458,165 @@ namespace SAMViewer
         {
             this.StatusTxt.Text = message;
         }   
-
         void Reset()
         {
             this.ClearAnation();
             this.mPromotionList.Clear();
             this.mMask.Source = null;
         }
-     
+
+        private void mAddPoint_Click(object sender, RoutedEventArgs e)
+        {
+            this.mCurOp = Operation.Point;
+        }
+
+        private void mAddBox_Click(object sender, RoutedEventArgs e)
+        {
+            this.mCurOp = Operation.Box;
+        }
+
+        private void mAutoSeg_Click(object sender, RoutedEventArgs e)
+        {
+            this.mAutoMask.points_per_side = int.Parse(this.mPoints_per_side.Text);
+            this.mAutoMask.pred_iou_thresh = float.Parse(this.mPred_iou_thresh.Text);
+            this.mAutoMask.stability_score_thresh = float.Parse(this.mStability_score_thresh.Text);
+            this.ShowStatus("Auto Segment......");
+            Thread thread = new Thread(() =>
+            {
+                this.mCurOp = Operation.Everything;               
+                this.mAutoMaskData = this.mAutoMask.Generate(this.mImagePath);
+                this.ShowMask(this.mAutoMaskData);
+            });
+            thread.Start();        
+        }
+        MaskData MatchTextAndImage(string txt)
+        {
+            var txtEmbedding = this.mCLIP.TxtEncoder(txt);
+            OpenCvSharp.Mat image = new OpenCvSharp.Mat(this.mImagePath, OpenCvSharp.ImreadModes.Color);
+            int maxindex = 0;
+            double max = 0.0;
+            MaskData final = new MaskData();
+            for (int i = 0; i < this.mAutoMaskData.mShape[1]; i++)
+            {
+                // Define the coordinates of the ROI
+                int x = this.mAutoMaskData.mBox[4 * i];  // Top-left x coordinate
+                int y = this.mAutoMaskData.mBox[4 * i + 1];// Top-left y coordinate
+                int width = this.mAutoMaskData.mBox[4 * i + 2] - this.mAutoMaskData.mBox[4 * i];  // Width of the ROI
+                int height = this.mAutoMaskData.mBox[4 * i + 3] - this.mAutoMaskData.mBox[4 * i + 1];  // Height of the ROI
+
+                // Create a Rect object for the ROI
+                OpenCvSharp.Rect roiRect = new OpenCvSharp.Rect(x, y, width, height);
+                // Extract the ROI from the image
+                OpenCvSharp.Mat roi = new OpenCvSharp.Mat(image, roiRect);
+                int neww = 0;
+                int newh = 0;
+                float scale = 224 * 1.0f / Math.Max(image.Rows, image.Cols);
+                float newht = image.Rows * scale;
+                float newwt = image.Cols * scale;
+
+                neww = (int)(newwt + 0.5);
+                newh = (int)(newht + 0.5);
+
+                OpenCvSharp.Mat resizedImage = new OpenCvSharp.Mat();
+                OpenCvSharp.Cv2.Resize(roi, resizedImage, new OpenCvSharp.Size(neww, newh));
+                // 创建大的Mat
+                OpenCvSharp.Mat largeMat = new OpenCvSharp.Mat(new OpenCvSharp.Size(224, 224), OpenCvSharp.MatType.CV_8UC3, OpenCvSharp.Scalar.Black);
+
+                // 计算小的Mat放置的位置
+                int xoffset = (largeMat.Width - resizedImage.Width) / 2;
+                int yoffset = (largeMat.Height - resizedImage.Height) / 2;
+
+                // 将小的Mat放置到大的Mat的中心位置
+                resizedImage.CopyTo(largeMat[new OpenCvSharp.Rect(xoffset, yoffset, resizedImage.Width, resizedImage.Height)]);
+
+                //将图像转换为浮点型
+                OpenCvSharp.Mat floatImage = new OpenCvSharp.Mat();
+                largeMat.ConvertTo(floatImage, OpenCvSharp.MatType.CV_32FC3);
+                // 计算均值和标准差
+                OpenCvSharp.Scalar mean = new OpenCvSharp.Scalar(0.48145466, 0.4578275, 0.40821073);
+                OpenCvSharp.Scalar std = new OpenCvSharp.Scalar(0.26862954, 0.26130258, 0.27577711);
+                // 归一化
+                OpenCvSharp.Cv2.Normalize(floatImage, floatImage, 0, 255, OpenCvSharp.NormTypes.MinMax);
+                OpenCvSharp.Cv2.Subtract(floatImage, mean, floatImage);
+                OpenCvSharp.Cv2.Divide(floatImage, std, floatImage);
+
+                float[] transformedImg = new float[3 * 224 * 224];
+                for (int ii = 0; ii < 224; ii++)
+                {
+                    for (int j = 0; j < 224; j++)
+                    {
+                        int index = j * 224 + ii;
+                        transformedImg[index] = floatImage.At<OpenCvSharp.Vec3f>(j, ii)[0];
+                        transformedImg[224 * 224 + index] = floatImage.At<OpenCvSharp.Vec3f>(j, ii)[1];
+                        transformedImg[2 * 224 * 224 + index] = floatImage.At<OpenCvSharp.Vec3f>(j, ii)[2];
+                    }
+                }
+
+                var imgEmbedding = this.mCLIP.ImgEncoder(transformedImg);
+                double maxs = CalculateCosineSimilarity(txtEmbedding.ToList(), imgEmbedding.ToList());
+                if (maxs > max)
+                {
+                    maxindex = i;
+                    max = maxs;
+                }
+
+                roi.Dispose();
+                resizedImage.Dispose();
+                largeMat.Dispose();
+                floatImage.Dispose();
+            }
+
+            this.mAutoMaskData.mShape.CopyTo(final.mShape,0);
+            final.mShape[1] = 1;
+            final.mBox.AddRange(this.mAutoMaskData.mBox.GetRange(maxindex * 4, 4));
+            final.mIoU.AddRange(this.mAutoMaskData.mIoU.GetRange(maxindex, 1));
+            final.mStalibility.AddRange(this.mAutoMaskData.mStalibility.GetRange(maxindex, 1));
+            //.GetRange(maxindex * final.mShape[2] * final.mShape[3], final.mShape[2] * final.mShape[3])
+            final.mfinalMask.Add(this.mAutoMaskData.mfinalMask[maxindex]);
+
+
+
+            image.Dispose();
+
+
+            return final;
+        }
+        private void mText_Click(object sender, RoutedEventArgs e)
+        {
+            this.mCurOp = Operation.Text;
+            this.ShowStatus("Image And Text Matching......");
+            string txt = this.mTextinput.Text;
+            Thread thread = new Thread(() =>
+            {
+                MaskData matches = this.MatchTextAndImage(txt);
+                this.ShowMask(matches);
+            });
+            thread.Start();
+        }
+
+        private void Expanded(object sender, RoutedEventArgs e)
+        {
+            if (this.mPointexp == null || this.mBoxexp == null || this.mEverythingExp == null || this.mTextExp == null)
+                return;
+
+            Expander exp = sender as Expander;
+            if (exp.IsExpanded == true)
+            {
+                this.mPointexp.IsExpanded = this.mPointexp == exp;
+                this.mBoxexp.IsExpanded = this.mBoxexp == exp;
+                this.mEverythingExp.IsExpanded = this.mEverythingExp == exp;
+                this.mTextExp.IsExpanded = this.mTextExp == exp;                                                   
+            }
+
+        }
+    }
+
+    enum Operation
+    {
+        Point,
+        Box,
+        Everything,
+        Text
     }
 
 }

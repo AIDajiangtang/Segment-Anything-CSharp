@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:SAMViewer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="1000">
+        Title="MainWindow" Height="600" Width="1000" Background="Gray">
 
     <Grid>
         <Grid.ColumnDefinitions>
@@ -28,17 +28,46 @@
 
         <StackPanel Grid.Column="1" >
             <TextBlock x:Name="PromotionTypeTxt" Width="150" Height="30" Text="PromotionType:" HorizontalAlignment="Left" Margin="20,30,0,0"/>
-            <StackPanel x:Name="mPromotSP" Width="200" Height="150"  HorizontalAlignment="Left" Margin="50,0,0,0">
-                <RadioButton x:Name="RPoint" Content="Point" GroupName="PromotionType" IsChecked="True"/>
-                <RadioButton x:Name="RBox" Content="Box" GroupName="PromotionType"  Margin="0,5,0,0"/>
-                <RadioButton x:Name="RText" Content="Text" GroupName="PromotionType" Margin="0,5,0,0" Click="RText_Click"/>
-                <TextBox x:Name="mTextinput" Margin="0,5,0,0" Height="50">a photo of</TextBox>
-                <RadioButton x:Name="REverything" Content="Everything" GroupName="PromotionType" Margin="0,5,0,0" Click="REveyything_Click"/>
+            <StackPanel x:Name="mPromotSP" Width="200"  HorizontalAlignment="Left" Margin="20,0,0,0" >
+                <Expander x:Name="mPointexp" Header="Point" IsExpanded="True" Expanded="Expanded">
+                    <StackPanel>
+                        <DockPanel x:Name="mOpTypeDP" Width="200" Height="30"  HorizontalAlignment="Left" Margin="5,0,0,0">
+                            <RadioButton x:Name="RAdd" Content="Add Mask" GroupName="ProOperationType" IsChecked="True" />
+                            <RadioButton x:Name="RRemove" Content="Remove Mask" GroupName="ProOperationType" Margin="5,0,0,0"/>
+                        </DockPanel>
+                        <Button x:Name="mAddPoint" Width="70" Height="30" Content="AddPoint" Click="mAddPoint_Click"/>
+                    </StackPanel>
+                </Expander>
+                <Expander x:Name="mBoxexp" Header="Box" IsExpanded="False" Expanded="Expanded">
+                    <StackPanel>
+                        <Button x:Name="mAddBox" Width="70" Height="30" Content="AddBox" Click="mAddBox_Click"/>
+                    </StackPanel>
+                </Expander>
+                <Expander  x:Name="mEverythingExp" Header="EveryThing" IsExpanded="False" Expanded="Expanded">
+                    <StackPanel>
+                        <DockPanel  Width="200" Height="50"  HorizontalAlignment="Left" Margin="5,0,0,0">
+                            <TextBlock  Margin="5,0,0,0" Height="20">points_per_side:</TextBlock>
+                            <TextBox x:Name="mPoints_per_side" Margin="5,0,0,0" Height="20">4</TextBox>
+                        </DockPanel>
+                        <DockPanel  Width="200" Height="50"  HorizontalAlignment="Left" Margin="5,0,0,0">
+                            <TextBlock  Margin="5,0,0,0" Height="20">pred_iou_thresh:</TextBlock>
+                            <TextBox x:Name="mPred_iou_thresh" Margin="5,0,0,0" Height="20">0.88</TextBox>
+                        </DockPanel>
+                        <DockPanel  Width="200" Height="50"  HorizontalAlignment="Left" Margin="5,0,0,0">
+                            <TextBlock  Margin="5,0,0,0" Height="20">stability_score_thresh:</TextBlock>
+                            <TextBox x:Name="mStability_score_thresh" Margin="5,0,0,0" Height="20">0.95</TextBox>
+                        </DockPanel>
+                        <Button x:Name="mAutoSeg" Width="70" Height="30" Content="AutoSeg" Click="mAutoSeg_Click"/>
+                    </StackPanel>
+                </Expander>
+                <Expander x:Name="mTextExp" Header="Text" IsExpanded="False" Expanded="Expanded">
+                    <StackPanel>
+                        <TextBox x:Name="mTextinput" Margin="0,5,0,0" Height="50">a photo of</TextBox>
+                        <Button x:Name="mText" Width="70" Height="30" Content="Match" Click="mText_Click"/>
+                    </StackPanel>
+                </Expander>
             </StackPanel>
-            <DockPanel x:Name="mOpTypeDP" Width="200" Height="50"  HorizontalAlignment="Left" Margin="50,0,0,0">
-                <RadioButton x:Name="RAdd" Content="Add Mask" GroupName="ProOperationType" IsChecked="True" />
-                <RadioButton x:Name="RRemove" Content="Remove Mask" GroupName="ProOperationType" Margin="5,0,0,0"/>
-            </DockPanel>
+
             <DockPanel  Width="230" Height="30"  HorizontalAlignment="Left" Margin="20,0,0,0">
                 <Button x:Name="BReset" Width="50" Height="30" Content="Reset" Click="BReset_Click"/>
                 <Button x:Name="BUndo"  Width="50" Height="30" Content="Undo"  Margin="10,0,0,0" Click="BUndo_Click"/>
