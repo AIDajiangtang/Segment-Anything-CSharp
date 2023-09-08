@@ -46,6 +46,10 @@ namespace SAMViewer
             if (this.mDecoder != null)
                 this.mDecoder.Dispose();
 
+            var options = new SessionOptions();
+            options.EnableMemoryPattern = false;
+            options.EnableCpuMemArena = false;
+
             string exePath = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
             string encode_model_path = exePath + @"\encoder-quant.onnx";
             if (!File.Exists(encode_model_path))
@@ -53,7 +57,7 @@ namespace SAMViewer
                 MessageBox.Show(encode_model_path + " not exist!");
                 return;
             }
-            this.mEncoder = new InferenceSession(encode_model_path);
+            this.mEncoder = new InferenceSession(encode_model_path, options);
 
             string decode_model_path = exePath + @"\decoder-quant.onnx";
             if (!File.Exists(decode_model_path))
@@ -61,7 +65,7 @@ namespace SAMViewer
                 MessageBox.Show(decode_model_path + " not exist!");
                 return;
             }
-            this.mDecoder = new InferenceSession(decode_model_path);
+            this.mDecoder = new InferenceSession(decode_model_path, options);
         }
         /// <summary>
         /// Segment Anything对图像进行编码
