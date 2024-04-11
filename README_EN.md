@@ -28,6 +28,6 @@ Effect demo:
 <img width="500" src="https://user-images.githubusercontent.com/18625471/256461679-0a357c01-3a7d-41cd-9a83-411fca9a8787.jpg">   
 <img width="500" src="https://user-images.githubusercontent.com/18625471/256462253-302bc6fb-f18e-4abc-ae69-5eacc3968a34.jpg">  
 
-Since Github does not support uploading files exceeding 25M, ONNX model files cannot be uploaded. If necessary, please pay attention to the following WeChat public account, and the background will reply [SAM]
+model file is upload to release, or  pay attention to the following WeChat public account, and the background will reply [SAM]get model file download link
 
 Pay attention to the WeChat public account: 人工智能大讲堂
