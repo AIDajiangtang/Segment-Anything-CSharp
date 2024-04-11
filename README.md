@@ -33,7 +33,7 @@ AutoSeg:自动分割，展everythin栏，设置阈值，根据points_per_side值
 Text Promot:展开text栏，先自动分割，然后借助CLIP计算自动分割的crop图像和text的相似度。  
 <img width="500" src="https://user-images.githubusercontent.com/18625471/259664515-502d4694-9b3c-4492-8a51-977ba6b372af.png">  
 
-由于Github不支持上传超过25M的文件，所以ONNX模型文件不能上传，如有需要请关注下面微信公众号，后台回复【SAM】  
+模型文件在Release中，或者关注下面微信公众号，后台回复【SAM】获取模型下载链接  
 
 关注微信公众号：**人工智能大讲堂**    
 <img width="180" src="https://user-images.githubusercontent.com/18625471/228743333-77abe467-2385-476d-86a2-e232c6482291.jpg">  
