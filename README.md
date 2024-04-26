@@ -20,6 +20,7 @@
   3.3搜索Microsoft.ML.OnnxRuntime，选择1.15.1版本，点击安装  
   3.4搜索OpenCvSharp4,选择4.8.0版本，点击安装  
   3.5搜索OpenCvSharp4.runtime.win,选择4.8.0版本，点击安装  
+  3.6SAMViewer目标平台设置x64
  4.将decoder-quant.onnx,encoder-quant.onnx,textual.onnx,visual.onnx放到exe路径下  
  5.运行程序
 
